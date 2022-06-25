@@ -16,15 +16,15 @@ pub enum Token {
     ILLEGAL,
     EOF,
     
-    // Identifiers + literals
-    IDENT, // add, foobar, x, y, ...
-    INT, // 1343456
+    //Identifiers + literals
+    IDENT(String), //add, foobar, x, y, ...
+    INT(String), //1343456
 
-    // Operators
+    //Operators
     ASSIGN,
     PLUS,
 
-    // Delimiters
+    //Delimiters
     COMMA,
     SEMICOLON,
     LPAREN,
@@ -32,6 +32,20 @@ pub enum Token {
     LBRACE,
     RBRACE,
 
+    //Keywords
+    FUNCTION,
+    LET,
+}
+
+pub fn lookup_ident(ident: &str) -> Token {
+
+    match ident {
+
+        "fn" => Token::FUNCTION,
+        "let" => Token::LET,
+        ident @ _ => Token::IDENT(ident.to_string())
+
+    }
 }
 
 #[test]
