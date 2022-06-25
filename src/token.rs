@@ -11,7 +11,7 @@ impl TokenType {
 */
 
 #[derive(Debug, PartialEq)]
-pub enum TokenType {
+pub enum Token {
 
     ILLEGAL,
     EOF,
@@ -34,17 +34,7 @@ pub enum TokenType {
 
 }
 
-
-pub struct Token {
-
-    // #[serde(rename = "type")]
-    kind: TokenType,
-    literal: String,
-
-}
-
 #[test]
-
 fn test() {
 
     
