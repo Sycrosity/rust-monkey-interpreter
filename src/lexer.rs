@@ -4,35 +4,28 @@ use std::{iter::Peekable, str::Chars};
 
 use crate::token::Token;
 
+//a lexer that takes an input and returns the tokenised version of the input
 pub struct Lexer<'a> {
 
+    //chars - we need to iterate over each character in the input, so we make it into a chars list.
+    //peekable - we need to be able to look into the future at what character is next, so we make it a peekable iterator.
+    //this cuts out most of the work that the go version of this has to do.
+    //[LEARN] needs a lifetime - not entirely sure why, but it won't work without it
     input: Peekable<Chars<'a>>,
-    /*
-    position: usize, // current position in input (points to current char)
-    read_position: usize, // current reading position in input (after current char)
-    ch: Option<char> // current char under examination
-    */
     
 }
 
 impl<'a> Lexer<'a> {
 
-    //generates a new lexer - Self refers to the lexer strut, and unlike in the 
+    //generates a new lexer with the correct type
     pub fn new(input: &'a str) -> Self { 
         Self { 
             input: input.chars().peekable(),
-            /* 
-            position: 0, 
-            read_position: 0, 
-            ch: input.chars().nth(0)
-            */
         }
     }
 
-    //returns either the next char, or a None - if its a None, we have iterated the input past the
-    //final line so it should return an EOF - the go tutorial does this by checking if its a blank
-    //byte, we do it by making each char an Option, and using a peekable chars list.
-    //[issue] - doesn't work with UTF8 encoding - fix in future!
+    //returns either the next char, or a None - if its a None, we have iterated the input past the final line so it should return an EOF - the go tutorial does this by checking if its a blank byte, we do it by making each char an Option, and using a peekable chars list.
+    //[TODO] doesn't work with UTF8 encoding - fix in future!
     pub fn read_char(&mut self) -> Option<char> {
 
         self.input.next()
@@ -45,7 +38,7 @@ impl<'a> Lexer<'a> {
 
     }
 
-    //checks if the char ahead is a letter
+    //checks if the char ahead is a letter - None or bool
     pub fn peek_is_letter(&mut self) -> bool {
 
         match self.peek_char() {
@@ -55,9 +48,19 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    //checks if the char ahead is numeric - None or bool
+    pub fn peek_is_number(&mut self) -> bool {
+
+        match self.peek_char() {
+                
+            Some(&ch) => is_number(ch),
+            None => false
+        }
+    }
+
     
-    // peeks at the letter ahead, and if its a valid letter (or _) adds it to a string - repeats until an invalid char is found, then returns the string.
-    // TODO? - make it return a string slice instead?
+    //peeks at the char ahead, and if its a valid letter (or an _) adds it to a string - this repeats until an invalid char is found, then returns the string.
+    //[TODO?] - make it return a string slice instead? (benchmark)
     fn read_identifier(&mut self, ch: char) -> String {
 
         let mut res: String = String::from(ch);
@@ -69,21 +72,20 @@ impl<'a> Lexer<'a> {
         res
     }
 
+    //peeks at the char ahead, and until 
     fn read_number(&mut self, ch: char) -> String {
 
-        let mut number = String::from(ch);
+        let mut res: String = String::from(ch);
 
-        while let Some(&peek) = self.peek_char() {
+        while self.peek_is_number() {
 
-            if !peek.is_numeric() {
-                break;
-            }
-            number.push(self.read_char().unwrap());
+            res.push(self.read_char().unwrap())
         }
-        number
+        res
     }
 
-    fn skip_whitespace(&mut self) {
+    //the lexer should ignore all whitespace, as it shouldn't matter (except in checking for identifers, where it doens't use this function)
+    pub fn skip_whitespace(&mut self) {
 
         while let Some(&peek) = self.peek_char() {
 
@@ -95,21 +97,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /*
-    func (l *Lexer) readIdentifier() string {
-        position := l.position
-        for isLetter(l.ch) {
-            l.readChar()
-    }
-    */
-
-    //
+    //returns the next token from the lexer - e.g. "=" => Token::ASSIGN, "five" => Token::IDENT("five")
     pub fn next_token(&mut self) -> Token {
 
         self.skip_whitespace();
 
         let tok: Option<char> = self.read_char();
 
+        //matches the next symbol (as a Some(char)) to its token - None is the EOF
         match tok {
             
             Some('=') => Token::ASSIGN,
@@ -122,21 +117,20 @@ impl<'a> Lexer<'a> {
             Some('}') => Token::RBRACE,
             // Some('') => Token::,
             
-            //catches all other options - must be a keyword, an identifier or illegal
+            //catches all other options - must be an integer or an identifier - else, its an illegal token.
             Some(ch @ _) => {
                 if is_letter(ch) {
 
-                    let literal = self.read_identifier(ch);
+                    let literal: String = self.read_identifier(ch);
                     crate::token::lookup_ident(&literal)
 
-                } else if ch.is_numeric() {
+                } else if is_number(ch) {
 
                     Token::INT(self.read_number(ch))
 
                 } else {
 
                     Token::ILLEGAL
-
                 }
             },
             None => Token::EOF,
@@ -144,13 +138,22 @@ impl<'a> Lexer<'a> {
     }
 }
 
+//checks if a char is an accepted identifier character - edit this function to change what can be in an identifer
 fn is_letter(ch: char) -> bool {
 
+    //[TODO] add other valid identifier chars (like numbers that aren't the first char)
     ch.is_alphabetic() || ch == '_'
 }
 
-//TODO - add tests for everything
+//checks if a char is an accepted integer character - edit this function to change what can be in an integer
+fn is_number(ch: char) -> bool {
 
+    //[TODO] add hex, oct, ect
+    ch.is_numeric()
+
+}
+
+//[TODO] add more lexer tests
 //tests the tokens against a pre-written list of tokens that it should equal to
 #[test]
 fn test_next_token() {
