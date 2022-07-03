@@ -66,7 +66,7 @@ impl<'a> Lexer<'a> {
     }
 
     //peeks at the char ahead, and until
-    fn read_number(&mut self, ch: char) -> String {
+    pub fn read_number(&mut self, ch: char) -> String {
         let mut res: String = String::from(ch);
 
         while self.peek_is_number() {
@@ -283,9 +283,9 @@ fn visible_test_token() {
     10 != 9;";
 
     let mut lex: Lexer = Lexer::new(input);
-    while let Some(x) = Some(lex.next_token()) {
-        if x != Token::EndOfFile {
-            println!("{:?}", x);
+    while let Some(token) = Some(lex.next_token()) {
+        if token != Token::EndOfFile {
+            println!("{:?}", token);
         } else {
             break;
         }
