@@ -38,6 +38,16 @@ impl<'a> Lexer<'a> {
 
     }
 
+    pub fn peek_char_eq(&mut self, eq: char) -> bool {
+
+        match self.peek_char() {
+
+            Some(&ch) => eq == ch,
+            None => false,
+
+        }
+    }
+
     //checks if the char ahead is a letter - None or bool
     pub fn peek_is_letter(&mut self) -> bool {
 
@@ -107,12 +117,40 @@ impl<'a> Lexer<'a> {
         //matches the next symbol (as a Some(char)) to its token - None is the EOF
         match tok {
             
-            Some('=') => Token::Assign,
+            Some('=') => {
+                
+                if self.peek_char_eq('=') {
+
+                    self.read_char();
+                    Token::Equal
+
+                } else {
+                
+                    Token::Assign              
+                }  
+            },
+            Some('+') => Token::Plus,
+            Some('-') => Token::Minus,
+            Some('!') => {
+                
+                if self.peek_char_eq('=') {
+
+                    self.read_char();
+                    Token::NotEqual
+
+                } else {
+                
+                    Token::Bang 
+                }
+            },
+            Some('*') => Token::Asterisk,
+            Some('/') => Token::Slash,
+            Some('<') => Token::LessThan,
+            Some('>') => Token::GreaterThan,
+            Some(',') => Token::Comma,
             Some(';') => Token::Semicolon,
             Some('(') => Token::LeftParenthesis,
             Some(')') => Token::RightParenthesis,
-            Some(',') => Token::Comma,
-            Some('+') => Token::Plus,
             Some('{') => Token::LeftBrace,
             Some('}') => Token::RightBrace,
             // Some('') => Token::,
@@ -166,7 +204,18 @@ fn test_next_token() {
           x + y
         };
         
-        let result = add(five, ten);"
+        let result = add(five, ten);
+        !-/*5;
+        5 < 10 > 5;
+        
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }
+        
+        10 == 10;
+        10 != 9;";
 
     let tests: Vec<Token> = vec![
 
@@ -207,6 +256,44 @@ fn test_next_token() {
         Token::RightParenthesis,
         Token::Semicolon,
         Token::EndOfFile,
+        Token::Bang,
+        Token::Minus,
+        Token::Slash,
+        Token::Asterisk,
+        Token::Integer("5".to_string()),
+        Token::Semicolon,
+        Token::Integer("5".to_string()),
+        Token::LessThan,
+        Token::Integer("10".to_string()),
+        Token::GreaterThan,
+        Token::Integer("5".to_string()),
+        Token::Semicolon,
+        Token::If,
+        Token::LeftParenthesis,
+        Token::Integer("5".to_string()),
+        Token::LessThan,
+        Token::Integer("10".to_string()),
+        Token::RightParenthesis,
+        Token::LeftBrace,
+        Token::Return,
+        Token::True,
+        Token::Semicolon,
+        Token::RightBrace,
+        Token::Else,
+        Token::LeftBrace,
+        Token::Return,
+        Token::False,
+        Token::Semicolon,
+        Token::RightBrace,
+        Token::Integer("10".to_string()),
+        Token::Equal,
+        Token::Integer("10".to_string()),
+        Token::Semicolon,
+        Token::Integer("10".to_string()),
+        Token::NotEqual,
+        Token::Integer("9".to_string()),
+        Token::Semicolon,
+        Token::EndOfFile,
 
     ];
 
@@ -226,10 +313,21 @@ fn visible_test_token() {
     let ten = 10;
 
     let add = fn(x, y) {
-        x + y;
+        x + y
     };
     
-    let result = add(five, ten);";
+    let result = add(five, ten);
+    !-/*5;
+    5 < 10 > 5;
+    
+    if (5 < 10) {
+        return true;
+    } else {
+        return false;
+    }
+
+    10 == 10;
+    10 != 9;";
 
     let mut lex: Lexer = Lexer::new(input);
     while let Some(x) = Some(lex.next_token()) {
