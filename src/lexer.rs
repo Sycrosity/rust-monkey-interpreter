@@ -97,7 +97,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    //returns the next token from the lexer - e.g. "=" => Token::ASSIGN, "five" => Token::IDENT("five")
+    //returns the next token from the lexer - e.g. "=" => Token::Assign, "five" => Token::Identifier("five")
     pub fn next_token(&mut self) -> Token {
 
         self.skip_whitespace();
@@ -107,14 +107,14 @@ impl<'a> Lexer<'a> {
         //matches the next symbol (as a Some(char)) to its token - None is the EOF
         match tok {
             
-            Some('=') => Token::ASSIGN,
-            Some(';') => Token::SEMICOLON,
-            Some('(') => Token::LPAREN,
-            Some(')') => Token::RPAREN,
-            Some(',') => Token::COMMA,
-            Some('+') => Token::PLUS,
-            Some('{') => Token::LBRACE,
-            Some('}') => Token::RBRACE,
+            Some('=') => Token::Assign,
+            Some(';') => Token::Semicolon,
+            Some('(') => Token::LeftParenthesis,
+            Some(')') => Token::RightParenthesis,
+            Some(',') => Token::Comma,
+            Some('+') => Token::Plus,
+            Some('{') => Token::LeftBrace,
+            Some('}') => Token::RightBrace,
             // Some('') => Token::,
             
             //catches all other options - must be an integer or an identifier - else, its an illegal token.
@@ -126,14 +126,14 @@ impl<'a> Lexer<'a> {
 
                 } else if is_number(ch) {
 
-                    Token::INT(self.read_number(ch))
+                    Token::Integer(self.read_number(ch))
 
                 } else {
 
-                    Token::ILLEGAL
+                    Token::Illegal
                 }
             },
-            None => Token::EOF,
+            None => Token::EndOfFile,
         }
     }
 }
@@ -141,7 +141,7 @@ impl<'a> Lexer<'a> {
 //checks if a char is an accepted identifier character - edit this function to change what can be in an identifer
 fn is_letter(ch: char) -> bool {
 
-    //[TODO] add other valid identifier chars (like numbers that aren't the first char)
+    //[TODO] add other valid identifier chars (e.g. numbers that aren't the first char)
     ch.is_alphabetic() || ch == '_'
 }
 
@@ -161,50 +161,52 @@ fn test_next_token() {
     let input =
         "let five = 5;
         let ten = 10;
+
         let add = fn(x, y) {
-        x + y;
+          x + y
         };
-        let result = add(five, ten);";
+        
+        let result = add(five, ten);"
 
     let tests: Vec<Token> = vec![
 
-        Token::LET,
-        Token::IDENT("five".to_string()),
-        Token::ASSIGN,
-        Token::INT("5".to_string()),
-        Token::SEMICOLON,
-        Token::LET,
-        Token::IDENT("ten".to_string()),
-        Token::ASSIGN,
-        Token::INT("10".to_string()),
-        Token::SEMICOLON,
-        Token::LET,
-        Token::IDENT("add".to_string()),
-        Token::ASSIGN,
-        Token::FUNCTION,
-        Token::LPAREN,
-        Token::IDENT("x".to_string()),
-        Token::COMMA,
-        Token::IDENT("y".to_string()),
-        Token::RPAREN,
-        Token::LBRACE,
-        Token::IDENT("x".to_string()),
-        Token::PLUS,
-        Token::IDENT("y".to_string()),
-        Token::SEMICOLON,
-        Token::RBRACE,
-        Token::SEMICOLON,
-        Token::LET,
-        Token::IDENT("result".to_string()),
-        Token::ASSIGN,
-        Token::IDENT("add".to_string()),
-        Token::LPAREN,
-        Token::IDENT("five".to_string()),
-        Token::COMMA,
-        Token::IDENT("ten".to_string()),
-        Token::RPAREN,
-        Token::SEMICOLON,
-        Token::EOF,
+        Token::Let,
+        Token::Identifier("five".to_string()),
+        Token::Assign,
+        Token::Integer("5".to_string()),
+        Token::Semicolon,
+        Token::Let,
+        Token::Identifier("ten".to_string()),
+        Token::Assign,
+        Token::Integer("10".to_string()),
+        Token::Semicolon,
+        Token::Let,
+        Token::Identifier("add".to_string()),
+        Token::Assign,
+        Token::Function,
+        Token::LeftParenthesis,
+        Token::Identifier("x".to_string()),
+        Token::Comma,
+        Token::Identifier("y".to_string()),
+        Token::RightParenthesis,
+        Token::LeftBrace,
+        Token::Identifier("x".to_string()),
+        Token::Plus,
+        Token::Identifier("y".to_string()),
+        Token::Semicolon,
+        Token::RightBrace,
+        Token::Semicolon,
+        Token::Let,
+        Token::Identifier("result".to_string()),
+        Token::Assign,
+        Token::Identifier("add".to_string()),
+        Token::LeftParenthesis,
+        Token::Identifier("five".to_string()),
+        Token::Comma,
+        Token::Identifier("ten".to_string()),
+        Token::RightParenthesis,
+        Token::Semicolon,
+        Token::EndOfFile,
 
     ];
 
@@ -220,17 +222,19 @@ fn test_next_token() {
 fn visible_test_token() {
 
     let input: &str = 
-    "let x = 5;
-    let y = 2;
-    fn double_add(a, b) {
-        a + b + a + b
-    }
-    let res = double_add(x, y);";
+    "let five = 5;
+    let ten = 10;
+
+    let add = fn(x, y) {
+        x + y;
+    };
+    
+    let result = add(five, ten);";
 
     let mut lex: Lexer = Lexer::new(input);
     while let Some(x) = Some(lex.next_token()) {
 
-        if x != Token::EOF {
+        if x != Token::EndOfFile {
             println!("{:?}", x);
         } else {
 
