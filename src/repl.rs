@@ -1,13 +1,15 @@
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
-use crate::lexer::Lexer;
 use crate::token::Token;
+use crate::lexer::Lexer;
 
 pub fn repl() {
+
     let mut rl: Editor<()> = Editor::<()>::new();
 
     loop {
+        
         let readline: Result<String, ReadlineError> = rl.readline(">> ");
         match readline {
             Ok(line) => {
@@ -21,19 +23,20 @@ pub fn repl() {
                         break;
                     }
                 }
-            }
+            },
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
-                break;
-            }
+                break
+            },
             Err(ReadlineError::Eof) => {
                 println!("CTRL-D");
-                break;
-            }
+                break
+            },
             Err(err) => {
                 println!("Error: {:?}", err);
-                break;
+                break
             }
         }
-    }
+    };
+
 }
