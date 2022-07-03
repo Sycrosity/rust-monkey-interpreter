@@ -53,4 +53,7 @@ pub fn lookup_ident(ident: &str) -> Token {
 }
 
 #[test]
-fn test() {}
+fn test() {
+    assert_eq!(lookup_ident("fn"), Token::Function);
+    assert_eq!(lookup_ident("test"), Token::Identifier("test".to_string()));
+}
