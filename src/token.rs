@@ -1,49 +1,57 @@
 #![allow(dead_code)]
 
-/*
-impl TokenType {
-    pub fn kind(token_type: TokenType) -> TokenType {
-        match token_type {
-            ""
-        }
-    }       
-}
-*/
-
 #[derive(Debug, PartialEq)]
 pub enum Token {
 
-    ILLEGAL,
-    EOF,
+    Illegal, // anything else - e.g. "£"
+    EndOfFile,
     
     //Identifiers + literals
-    IDENT(String), //add, foobar, x, y, ...
-    INT(String), //1343456
-
+    Identifier(String), //e.go foo, bar, x, y
+    Integer(String), //1343456, 7, 34
+    
     //Operators
-    ASSIGN,
-    PLUS,
-
+    Assign, //"="
+    Plus, //"+"
+    Minus, //"-"
+    Bang, //"!"
+    Asterisk, //"*"
+    Slash, //"/"
+    LessThan, //"<"
+    GreaterThan, //">"
+    Equal, //"=="
+    NotEqual, //"!="
+    
     //Delimiters
-    COMMA,
-    SEMICOLON,
-    LPAREN,
-    RPAREN,
-    LBRACE,
-    RBRACE,
-
+    Comma, //"
+    Semicolon, //";"
+    LeftParenthesis, //"("
+    RightParenthesis, //")"
+    LeftBrace, //"{"
+    RightBrace, //"}"
+    
     //Keywords
-    FUNCTION,
-    LET,
+    Function, //"fn"
+    Let, //"let"
+    True, //"true"
+    False, //"false"
+    If, //"if"
+    Else, //"else"
+    Return, //"return"
 }
 
 pub fn lookup_ident(ident: &str) -> Token {
 
     match ident {
 
-        "fn" => Token::FUNCTION,
-        "let" => Token::LET,
-        ident @ _ => Token::IDENT(ident.to_string())
+        "fn" => Token::Function,
+        "let" => Token::Let,
+        "true" => Token::True,
+        "false" => Token::False,
+        "if" => Token::If,
+        "else" => Token::Else,
+        "return" => Token::Return,
+        ident @ _ => Token::Identifier(ident.to_string())
 
     }
 }
