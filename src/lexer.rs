@@ -23,15 +23,15 @@ impl<'a> Lexer<'a> {
 
     //returns either the next char, or a None - if its a None, we have iterated the input past the final line so it should return an EOF - the go tutorial does this by checking if its a blank byte, we do it by making each char an Option, and using a peekable chars list.
     //[TODO] doesn't work with UTF8 encoding - fix in future!
-    pub fn read_char(&mut self) -> Option<char> {
+    fn read_char(&mut self) -> Option<char> {
         self.input.next()
     }
 
-    pub fn peek_char(&mut self) -> Option<&char> {
+    fn peek_char(&mut self) -> Option<&char> {
         self.input.peek()
     }
 
-    pub fn peek_char_eq(&mut self, eq: char) -> bool {
+    fn peek_char_eq(&mut self, eq: char) -> bool {
         match self.peek_char() {
             Some(&ch) => eq == ch,
             None => false,
@@ -39,7 +39,7 @@ impl<'a> Lexer<'a> {
     }
 
     //checks if the char ahead is a letter - None or bool
-    pub fn peek_is_letter(&mut self) -> bool {
+    fn peek_is_letter(&mut self) -> bool {
         match self.peek_char() {
             Some(&ch) => is_letter(ch),
             None => false,
@@ -47,7 +47,7 @@ impl<'a> Lexer<'a> {
     }
 
     //checks if the char ahead is numeric - None or bool
-    pub fn peek_is_number(&mut self) -> bool {
+    fn peek_is_number(&mut self) -> bool {
         match self.peek_char() {
             Some(&ch) => is_number(ch),
             None => false,
@@ -66,7 +66,7 @@ impl<'a> Lexer<'a> {
     }
 
     //peeks at the char ahead, and until
-    pub fn read_number(&mut self, ch: char) -> String {
+    fn read_number(&mut self, ch: char) -> String {
         let mut res: String = String::from(ch);
 
         while self.peek_is_number() {
@@ -76,7 +76,7 @@ impl<'a> Lexer<'a> {
     }
 
     //the lexer should ignore all whitespace, as it shouldn't matter (except in checking for identifers, where it doens't use this function)
-    pub fn skip_whitespace(&mut self) {
+    fn skip_whitespace(&mut self) {
         while let Some(&peek) = self.peek_char() {
             //no whitespace is more common, so that should be checked first
             if !peek.is_whitespace() {
