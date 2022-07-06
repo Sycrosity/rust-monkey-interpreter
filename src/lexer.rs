@@ -5,30 +5,32 @@ use std::{iter::Peekable, str::Chars};
 use crate::token::Token;
 
 //a lexer that takes an input and returns the tokenised version of the input
-pub struct Lexer<'a> {
+pub struct Lexer<'source> {
     //chars - we need to iterate over each character in the input, so we make it into a chars list.
     //peekable - we need to be able to look into the future at what character is next, so we make it a peekable iterator.
     //this cuts out most of the work that the go version of this has to do.
     //[LEARN] needs a lifetime - not entirely sure why, but it won't work without it
-    input: Peekable<Chars<'a>>,
+    input: &'source str,
+    iter: Peekable<Chars<'source>>,
 }
 
-impl<'a> Lexer<'a> {
+impl<'source> Lexer<'source> {
     //generates a new lexer with the correct type
-    pub fn new(input: &'a str) -> Self {
+    pub fn new(input: &'source str) -> Self {
         Self {
-            input: input.chars().peekable(),
+            input,
+            iter: input.chars().peekable(),
         }
     }
 
     //returns either the next char, or a None - if its a None, we have iterated the input past the final line so it should return an EOF - the go tutorial does this by checking if its a blank byte, we do it by making each char an Option, and using a peekable chars list.
     //[TODO] doesn't work with UTF8 encoding - fix in future!
     fn read_char(&mut self) -> Option<char> {
-        self.input.next()
+        self.iter.next()
     }
 
     fn peek_char(&mut self) -> Option<&char> {
-        self.input.peek()
+        self.iter.peek()
     }
 
     fn peek_char_eq(&mut self, eq: char) -> bool {
