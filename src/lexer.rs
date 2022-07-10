@@ -1,17 +1,18 @@
 #![allow(dead_code)]
 
-use std::{iter::Peekable, str::Chars};
+use std::{iter::Peekable, str::CharIndices};
 
 use crate::token::Token;
 
 //a lexer that takes an input and returns the tokenised version of the input
 pub struct Lexer<'source> {
-    //chars - we need to iterate over each character in the input, so we make it into a chars list.
+    //charIndices - we need to iterate over each character in the input and see what index it is, so we make it into a charIndices list.
     //peekable - we need to be able to look into the future at what character is next, so we make it a peekable iterator.
     //this cuts out most of the work that the go version of this has to do.
     //[LEARN] needs a lifetime - not entirely sure why, but it won't work without it
+    //[TODO?] - make a new version of charIndices that is a struct so instead of having to do tok.1, you can do tok.value?
     input: &'source str,
-    iter: Peekable<Chars<'source>>,
+    iter: Peekable<CharIndices<'source>>,
 }
 
 impl<'source> Lexer<'source> {
@@ -19,23 +20,23 @@ impl<'source> Lexer<'source> {
     pub fn new(input: &'source str) -> Self {
         Self {
             input,
-            iter: input.chars().peekable(),
+            iter: input.char_indices().peekable(),
         }
     }
 
     //returns either the next char, or a None - if its a None, we have iterated the input past the final line so it should return an EOF - the go tutorial does this by checking if its a blank byte, we do it by making each char an Option, and using a peekable chars list.
     //[TODO] doesn't work with UTF8 encoding - fix in future!
-    fn read_char(&mut self) -> Option<char> {
+    fn read_char(&mut self) -> Option<(usize, char)> {
         self.iter.next()
     }
 
-    fn peek_char(&mut self) -> Option<&char> {
+    fn peek_char(&mut self) -> Option<&(usize, char)> {
         self.iter.peek()
     }
 
     fn peek_char_eq(&mut self, eq: char) -> bool {
         match self.peek_char() {
-            Some(&ch) => eq == ch,
+            Some(&ch) => eq == ch.1,
             None => false,
         }
     }
@@ -43,7 +44,7 @@ impl<'source> Lexer<'source> {
     //checks if the char ahead is a letter - None or bool
     fn peek_is_letter(&mut self) -> bool {
         match self.peek_char() {
-            Some(&ch) => is_letter(ch),
+            Some(&ch) => is_letter(ch.1),
             None => false,
         }
     }
@@ -51,37 +52,40 @@ impl<'source> Lexer<'source> {
     //checks if the char ahead is numeric - None or bool
     fn peek_is_number(&mut self) -> bool {
         match self.peek_char() {
-            Some(&ch) => is_number(ch),
+            Some(&ch) => is_number(ch.1),
             None => false,
         }
     }
 
-    //peeks at the char ahead, and if its a valid letter (or an _) adds it to a string - this repeats until an invalid char is found, then returns the string.
-    //[TODO?] - make it return a string slice instead? (benchmark)
-    fn read_identifier(&mut self, ch: char) -> String {
-        let mut res: String = String::from(ch);
-
+    //peeks at the char ahead, and if its a letter, adds one to an iterator and skips to the next char - returns a slice of the original input as the output
+    //[TODO] - intergrate index as a return from self.read_char(), so an extra index isn't needed
+    fn read_identifier(&mut self, tok: (usize, char)) -> &str {
+        let startpos = tok.0;
+        let mut index = startpos + 1;
         while self.peek_is_letter() {
-            res.push(self.read_char().unwrap())
+            index += 1;
+            self.read_char();
         }
-        res
+        &self.input[startpos..index]
     }
 
-    //peeks at the char ahead, and until
-    fn read_number(&mut self, ch: char) -> String {
-        let mut res: String = String::from(ch);
-
+    //peeks at the char ahead, and if its a number, adds one to an iterator and skips to the next char - returns a slice of the original input as the output
+    //[TODO] - intergrate index as a return from self.read_char(), so an extra index isn't needed
+    fn read_number(&mut self, tok: (usize, char)) -> &str {
+        let startpos = tok.0;
+        let mut index = startpos + 1;
         while self.peek_is_number() {
-            res.push(self.read_char().unwrap())
+            index += 1;
+            self.read_char();
         }
-        res
+        &self.input[startpos..index]
     }
 
     //the lexer should ignore all whitespace, as it shouldn't matter (except in checking for identifers, where it doens't use this function)
     fn skip_whitespace(&mut self) {
         while let Some(&peek) = self.peek_char() {
             //no whitespace is more common, so that should be checked first
-            if !peek.is_whitespace() {
+            if !peek.1.is_whitespace() {
                 break;
             }
             self.read_char();
@@ -92,11 +96,21 @@ impl<'source> Lexer<'source> {
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
 
-        let tok: Option<char> = self.read_char();
+        let tok: Option<(usize, char)> = self.read_char();
+        // let Some(tok2) = self.read_char();
+
+        //[DEPRECATED] - really fucking aids, but it makes the match code below look nice and not have to use Some((_, ''))
+        /*
+        let tok = if let Some(tok) = self.read_char() {
+            (Some(tok.0), Some(tok.1))
+        } else {
+            (None, None)
+        };
+        */
 
         //matches the next symbol (as a Some(char)) to its token - None is the EOF
         match tok {
-            Some('=') => {
+            Some((_, '=')) => {
                 if self.peek_char_eq('=') {
                     self.read_char();
                     Token::Equal
@@ -104,9 +118,9 @@ impl<'source> Lexer<'source> {
                     Token::Assign
                 }
             }
-            Some('+') => Token::Plus,
-            Some('-') => Token::Minus,
-            Some('!') => {
+            Some((_, '+')) => Token::Plus,
+            Some((_, '-')) => Token::Minus,
+            Some((_, '!')) => {
                 if self.peek_char_eq('=') {
                     self.read_char();
                     Token::NotEqual
@@ -114,25 +128,26 @@ impl<'source> Lexer<'source> {
                     Token::Bang
                 }
             }
-            Some('*') => Token::Asterisk,
-            Some('/') => Token::Slash,
-            Some('<') => Token::LessThan,
-            Some('>') => Token::GreaterThan,
-            Some(',') => Token::Comma,
-            Some(';') => Token::Semicolon,
-            Some('(') => Token::LeftParenthesis,
-            Some(')') => Token::RightParenthesis,
-            Some('{') => Token::LeftBrace,
-            Some('}') => Token::RightBrace,
-            // Some('') => Token::,
+            Some((_, '*')) => Token::Asterisk,
+            Some((_, '/')) => Token::Slash,
+            Some((_, '<')) => Token::LessThan,
+            Some((_, '>')) => Token::GreaterThan,
+            Some((_, ',')) => Token::Comma,
+            Some((_, ';')) => Token::Semicolon,
+            Some((_, '(')) => Token::LeftParenthesis,
+            Some((_, ')')) => Token::RightParenthesis,
+            Some((_, '{')) => Token::LeftBrace,
+            Some((_, '}')) => Token::RightBrace,
+            // Some((_, '') => Token::,
 
             //catches all other options - must be an integer or an identifier - else, its an illegal token.
-            Some(ch) => {
+            //[TODO?] - make read_identifier and read_number take the first part of the Some tuple (the index) as an input instead of having to lend the whole tok
+            Some((_, ch)) => {
                 if is_letter(ch) {
-                    let literal: String = self.read_identifier(ch);
+                    let literal: &str = self.read_identifier(tok.unwrap());
                     crate::token::lookup_ident(&literal)
                 } else if is_number(ch) {
-                    Token::Integer(self.read_number(ch))
+                    Token::Integer(self.read_number(tok.unwrap()))
                 } else {
                     Token::Illegal
                 }
@@ -180,57 +195,57 @@ fn test_next_token() {
 
     let tests: Vec<Token> = vec![
         Token::Let,
-        Token::Identifier("five".to_string()),
+        Token::Identifier("five"),
         Token::Assign,
-        Token::Integer("5".to_string()),
+        Token::Integer("5"),
         Token::Semicolon,
         Token::Let,
-        Token::Identifier("ten".to_string()),
+        Token::Identifier("ten"),
         Token::Assign,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::Semicolon,
         Token::Let,
-        Token::Identifier("add".to_string()),
+        Token::Identifier("add"),
         Token::Assign,
         Token::Function,
         Token::LeftParenthesis,
-        Token::Identifier("x".to_string()),
+        Token::Identifier("x"),
         Token::Comma,
-        Token::Identifier("y".to_string()),
+        Token::Identifier("y"),
         Token::RightParenthesis,
         Token::LeftBrace,
-        Token::Identifier("x".to_string()),
+        Token::Identifier("x"),
         Token::Plus,
-        Token::Identifier("y".to_string()),
+        Token::Identifier("y"),
         Token::RightBrace,
         Token::Semicolon,
         Token::Let,
-        Token::Identifier("result".to_string()),
+        Token::Identifier("result"),
         Token::Assign,
-        Token::Identifier("add".to_string()),
+        Token::Identifier("add"),
         Token::LeftParenthesis,
-        Token::Identifier("five".to_string()),
+        Token::Identifier("five"),
         Token::Comma,
-        Token::Identifier("ten".to_string()),
+        Token::Identifier("ten"),
         Token::RightParenthesis,
         Token::Semicolon,
         Token::Bang,
         Token::Minus,
         Token::Slash,
         Token::Asterisk,
-        Token::Integer("5".to_string()),
+        Token::Integer("5"),
         Token::Semicolon,
-        Token::Integer("5".to_string()),
+        Token::Integer("5"),
         Token::LessThan,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::GreaterThan,
-        Token::Integer("5".to_string()),
+        Token::Integer("5"),
         Token::Semicolon,
         Token::If,
         Token::LeftParenthesis,
-        Token::Integer("5".to_string()),
+        Token::Integer("5"),
         Token::LessThan,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::RightParenthesis,
         Token::LeftBrace,
         Token::Return,
@@ -243,13 +258,13 @@ fn test_next_token() {
         Token::False,
         Token::Semicolon,
         Token::RightBrace,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::Equal,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::Semicolon,
-        Token::Integer("10".to_string()),
+        Token::Integer("10"),
         Token::NotEqual,
-        Token::Integer("9".to_string()),
+        Token::Integer("9"),
         Token::Semicolon,
         Token::EndOfFile,
     ];
