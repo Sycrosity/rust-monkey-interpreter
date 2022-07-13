@@ -2,7 +2,7 @@
 
 use std::{iter::Peekable, str::CharIndices};
 
-use crate::token::Token;
+use crate::token::{lookup_ident, Token};
 
 //a lexer that takes an input and returns the tokenised version of the input
 pub struct Lexer<'source> {
@@ -145,14 +145,14 @@ impl<'source> Lexer<'source> {
             Some((_, ')')) => Token::RightParenthesis,
             Some((_, '{')) => Token::LeftBrace,
             Some((_, '}')) => Token::RightBrace,
-            // Some((_, '') => Token::,
+            // Some((_, '')) => Token::,
 
             //catches all other options - must be an integer or an identifier - else, its an illegal token.
-            //[TODO?] - make read_identifier and read_number take the first part of the Some tuple (the index) as an input instead of having to lend the whole tok
+            //[TODO?] - make read_identifier and read_number take the first part of the Some tuple (the index) as an input instead of having to lend the whole tok variable
             Some((_, ch)) => {
                 if is_letter(ch) {
                     let literal: &str = self.read_identifier(tok.unwrap());
-                    crate::token::lookup_ident(&literal)
+                    lookup_ident(literal)
                 } else if is_number(ch) {
                     Token::Integer(self.read_number(tok.unwrap()))
                 } else {
