@@ -59,19 +59,26 @@ impl<'source> Lexer<'source> {
 
     //peeks at the char ahead, and if its a letter, adds one to an iterator and skips to the next char - returns a slice of the original input as the output
     //[TODO] - intergrate index as a return from self.read_char(), so an extra index isn't needed
-    fn read_identifier(&mut self, tok: (usize, char)) -> &str {
+    fn read_identifier(&mut self, tok: (usize, char)) -> &'source str {
         let startpos = tok.0;
         let mut index = startpos + 1;
         while self.peek_is_letter() {
             index += 1;
             self.read_char();
         }
+
+        //[TODO?] - add this for potentially impossible edge case of index being out of range?
+        // if let Some(slice) = self.input.get(startpos..index) {
+        //     return slice;
+        // } else {
+        //     panic!("slice from read_identifier() ");
+        // }
         &self.input[startpos..index]
     }
 
     //peeks at the char ahead, and if its a number, adds one to an iterator and skips to the next char - returns a slice of the original input as the output
     //[TODO] - intergrate index as a return from self.read_char(), so an extra index isn't needed
-    fn read_number(&mut self, tok: (usize, char)) -> &str {
+    fn read_number(&mut self, tok: (usize, char)) -> &'source str {
         let startpos = tok.0;
         let mut index = startpos + 1;
         while self.peek_is_number() {
@@ -93,7 +100,7 @@ impl<'source> Lexer<'source> {
     }
 
     //returns the next token from the lexer - e.g. "=" => Token::Assign, "five" => Token::Identifier("five")
-    pub fn next_token(&mut self) -> Token {
+    pub fn next_token(&mut self) -> Token<'source> {
         self.skip_whitespace();
 
         let tok: Option<(usize, char)> = self.read_char();
