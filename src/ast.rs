@@ -17,6 +17,12 @@ impl<'source> Program<'source> {
     }
 }
 
+impl<'source> Default for Program<'source> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Statement<'source> {
     Let(&'source str, Expression<'source>),

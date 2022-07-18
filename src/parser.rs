@@ -10,7 +10,6 @@ use std::iter::{Iterator, Peekable};
 
 // type Result<'source, T> = std::result::Result<T, ParserError<'source>>;
 
-
 //[TODO] -  make error system more verbose and thorough
 #[derive(Debug)]
 pub enum ParserError<'source> {
@@ -63,7 +62,9 @@ impl<'source> Parser<'source> {
             if peek != Token::EndOfFile {
                 match self.parse_statement() {
                     Ok(statement) => program.statements.push(statement),
-                    Err(err) => { self.errors.push(err); },
+                    Err(err) => {
+                        self.errors.push(err);
+                    }
                 }
             } else {
                 break;
@@ -80,7 +81,7 @@ impl<'source> Parser<'source> {
             Some(tok) =>
             /*todo!()*/
             {
-                println!("statement: {:?}",tok);
+                println!("statement: {:?}", tok);
                 Err(ParserError::Unknown(1))
             }
             None => todo!(),
@@ -110,7 +111,7 @@ impl<'source> Parser<'source> {
     where
         F: Fn(Token<'source>) -> ParserError<'source>,
     {
-        if let Some(&peek) = self.peek_token().clone() {
+        if let Some(&peek) = self.peek_token() {
             if peek == eq {
                 self.read_token();
                 Ok(())
@@ -142,7 +143,7 @@ impl<'source> Parser<'source> {
     fn parse_let_statement(&mut self) -> Result<Statement<'source>, ParserError<'source>> {
         let identifier: &'source str;
 
-        if let Some(tok) = self.read_token().clone() {
+        if let Some(tok) = self.read_token() {
             if let Token::Identifier(ident) = tok {
                 identifier = ident;
 
