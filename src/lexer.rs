@@ -4,19 +4,35 @@ use std::{iter::Peekable, str::CharIndices};
 
 use crate::token::Token;
 
-//a lexer that takes an input and returns the tokenised version of the input
+//[TODO?] - add proper documentation?
+
+//a lexer that borrows an input and returns the tokenised version of the input
 pub struct Lexer<'source> {
     //charIndices - we need to iterate over each character in the input and see what index it is, so we make it into a charIndices list.
     //peekable - we need to be able to look into the future at what character is next, so we make it a peekable iterator.
     //this cuts out most of the work that the go version of this has to do.
-    //[LEARN] needs a lifetime - not entirely sure why, but it won't work without it
     //[TODO?] - make a new version of charIndices that is a struct so instead of having to do tok.1, you can do tok.value?
     input: &'source str,
     iter: Peekable<CharIndices<'source>>,
 }
 
+impl<'source> Iterator for Lexer<'source> {
+    type Item = Token<'source>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let tok: Token = self.next_token();
+
+        if tok != Token::EndOfFile {
+            Some(tok)
+        } else {
+            None
+        }
+    }
+}
+
+//all of the functions that a lexer needs to have to tokenise an input
 impl<'source> Lexer<'source> {
-    //generates a new lexer with the correct type
+    //generates a new lexer with the correct types
     pub fn new(input: &'source str) -> Self {
         Self {
             input,
@@ -34,6 +50,7 @@ impl<'source> Lexer<'source> {
         self.iter.peek()
     }
 
+    //checks if the char inputed is equal to the next peeked char
     fn peek_char_eq(&mut self, eq: char) -> bool {
         match self.peek_char() {
             Some(&ch) => eq == ch.1,
@@ -89,6 +106,16 @@ impl<'source> Lexer<'source> {
     }
 
     //the lexer should ignore all whitespace, as it shouldn't matter (except in checking for identifers, where it doens't use this function)
+    // fn skip_whitespace(&mut self) {
+    //     while let Some(&peek) = self.peek_char() {
+    //         //no whitespace is more common, so that should be checked first
+    //         if !peek.1.is_whitespace() {
+    //             break;
+    //         }
+    //         self.read_char();
+    //     }
+    // }
+
     fn skip_whitespace(&mut self) {
         while let Some(&peek) = self.peek_char() {
             //no whitespace is more common, so that should be checked first
@@ -115,6 +142,7 @@ impl<'source> Lexer<'source> {
         };
         */
 
+        //[TODO] - make this clean (not sure how else to word that)
         //matches the next symbol (as a Some(char)) to its token - None is the EOF
         match tok {
             Some((_, '=')) => {
@@ -152,7 +180,7 @@ impl<'source> Lexer<'source> {
             Some((_, ch)) => {
                 if is_letter(ch) {
                     let literal: &str = self.read_identifier(tok.unwrap());
-                    crate::token::lookup_ident(&literal)
+                    crate::token::lookup_ident(literal)
                 } else if is_number(ch) {
                     Token::Integer(self.read_number(tok.unwrap()))
                 } else {
