@@ -16,6 +16,7 @@ pub struct Lexer<'source> {
     iter: Peekable<CharIndices<'source>>,
 }
 
+//so the parser can peek over the lexers list of tokens
 impl<'source> Iterator for Lexer<'source> {
     type Item = Token<'source>;
 
