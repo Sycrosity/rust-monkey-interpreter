@@ -28,6 +28,7 @@ impl<'source> Default for Program<'source> {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Statement<'source> {
     Let(&'source str, Expression<'source>),
+    Return(Expression<'source>),
 }
 
 //[TODO] - add more types in future

@@ -74,7 +74,7 @@ impl<'source> Parser<'source> {
         let tok: Option<Token<'source>> = self.read_token();
         match tok {
             Some(Token::Let) => self.parse_let_statement(),
-            Some(Token::Return) => todo!(),
+            Some(Token::Return) => self.parse_return_statement(),
             Some(_) => {
                 //shouldn't error here, and should be replaced with better erroring.
                 println!("statement current: {:?}", tok);
@@ -167,6 +167,12 @@ impl<'source> Parser<'source> {
         Ok(Statement::Let(identifier, Expression::Identifier("hii")))
     }
 
+    fn parse_return_statement(&mut self) -> Result<Statement<'source>, ParserError<'source>> {
+        while Some(Token::Semicolon) != self.read_token() {}
+
+        Ok(Statement::Return(Expression::Integer(69420)))
+    }
+
     //[TODO] - parse the error enums into actual readable error messages
     //prints out out the errors from a parser
     fn check_parser_errors(&self) {
@@ -239,6 +245,11 @@ fn test_let_statements() {
         .for_each(|statement: (usize, &str)| {
             if let Some(Statement::Let(x, _)) = Some(program.statements[statement.0]) {
                 assert_eq!(x, statement.1);
+            } else {
+                panic!(
+                    "{}: did not recieve a let statement, instead got {:?}",
+                    statement.0, program.statements[statement.0]
+                );
             }
 
             // assert_eq!(program.statements[statement.0], statement.1);
@@ -259,4 +270,45 @@ fn test_errors() {
     parser.parse_program();
     parser.check_parser_errors();
     println!("{:?}", parser.errors)
+}
+
+#[test]
+fn test_return_statements() {
+    let input: &str = "return 5;
+    return 10;
+    return 993322;";
+
+    // let lex = Lexer::new(input);
+
+    let lexer: Lexer = Lexer::new(input);
+    let mut parser: Parser = Parser::new(lexer);
+
+    let program: Program = parser.parse_program();
+    parser.check_parser_errors();
+
+    let tests: Vec<i32> = vec![5, 10, 993322];
+
+    if program.statements.len() == 3 {
+        // assert_eq!(program.statements, tests);
+        tests
+            .into_iter()
+            .enumerate()
+            .for_each(|statement: (usize, i32)| {
+                if let Some(Statement::Return(Expression::Integer(x))) =
+                    Some(program.statements[statement.0])
+                {
+                    assert_eq!(x, statement.1);
+                } else {
+                    panic!(
+                        "{}: did not recieve a return statement, instead got {:?}",
+                        statement.0, program.statements[statement.0]
+                    );
+                }
+            });
+    } else {
+        panic!(
+            "incorrect length of statements - expected 3, got {}",
+            program.statements.len()
+        );
+    }
 }
