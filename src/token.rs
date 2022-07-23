@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+//[TODO] - remove Token::EndOfFile and replace with just the None enum to simplify code
+
 //every type of token that could exist in the code, so code can be broken up into chunks - e.g. let i = 2; becomes [Token::Let, Token::Identifier("i"), Token::Assign, Token::Integer("2"), Token::SemiColon, Token::EndOfFile]
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Token<'source> {
