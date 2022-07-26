@@ -238,29 +238,37 @@ fn test_let_statements() {
 
     let tests: Vec<&str> = vec!["x", "y", "foobar"];
 
-    // assert_eq!(program.statements, tests);
-    tests
-        .into_iter()
-        .enumerate()
-        .for_each(|statement: (usize, &str)| {
-            if let Some(Statement::Let(x, _)) = Some(program.statements[statement.0]) {
-                assert_eq!(x, statement.1);
-            } else {
-                panic!(
-                    "{}: did not recieve a let statement, instead got {:?}",
-                    statement.0, program.statements[statement.0]
-                );
-            }
+    if program.statements.len() == tests.len() {
+        // assert_eq!(program.statements, tests);
+        tests
+            .into_iter()
+            .enumerate()
+            .for_each(|statement: (usize, &str)| {
+                if let Some(Statement::Let(x, _)) = Some(program.statements[statement.0]) {
+                    assert_eq!(x, statement.1);
+                } else {
+                    panic!(
+                        "{}: did not recieve a let statement, instead got {:?}",
+                        statement.0, program.statements[statement.0]
+                    );
+                }
 
-            // assert_eq!(program.statements[statement.0], statement.1);
-        });
+                // assert_eq!(program.statements[statement.0], statement.1);
+            });
+    } else {
+        panic!(
+            "incorrect length of statements - expected {}, got {}",
+            tests.len(),
+            program.statements.len()
+        );
+    }
 }
 
 //[TODO] - add more errors to test
 //[TODO!] - errors don't error properly
 #[test]
 fn test_errors() {
-    let input: &str = "let x 5 5;";
+    let input: &str = "let x 5;";
 
     // let lex = Lexer::new(input);
 
@@ -288,7 +296,7 @@ fn test_return_statements() {
 
     let tests: Vec<i32> = vec![5, 10, 993322];
 
-    if program.statements.len() == 3 {
+    if program.statements.len() == tests.len() {
         // assert_eq!(program.statements, tests);
         tests
             .into_iter()
@@ -307,7 +315,8 @@ fn test_return_statements() {
             });
     } else {
         panic!(
-            "incorrect length of statements - expected 3, got {}",
+            "incorrect length of statements - expected {}, got {}",
+            tests.len(),
             program.statements.len()
         );
     }

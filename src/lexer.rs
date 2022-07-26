@@ -96,14 +96,15 @@ impl<'source> Lexer<'source> {
 
     //peeks at the char ahead, and if its a number, adds one to an iterator and skips to the next char - returns a slice of the original input as the output
     //[TODO] - intergrate index as a return from self.read_char(), so an extra index isn't needed
-    fn read_number(&mut self, tok: (usize, char)) -> &'source str {
+    fn read_number(&mut self, tok: (usize, char)) -> i32 {
         let startpos = tok.0;
         let mut index = startpos + 1;
         while self.peek_is_number() {
             index += 1;
             self.read_char();
         }
-        &self.input[startpos..index]
+
+        self.input[startpos..index].parse::<i32>().unwrap()
     }
 
     //the lexer should ignore all whitespace, as it shouldn't matter (except in checking for identifers, where it doens't use this function)
@@ -233,12 +234,12 @@ fn test_next_token() {
         Token::Let,
         Token::Identifier("five"),
         Token::Assign,
-        Token::Integer("5"),
+        Token::Integer(5),
         Token::Semicolon,
         Token::Let,
         Token::Identifier("ten"),
         Token::Assign,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::Semicolon,
         Token::Let,
         Token::Identifier("add"),
@@ -269,19 +270,19 @@ fn test_next_token() {
         Token::Minus,
         Token::Slash,
         Token::Asterisk,
-        Token::Integer("5"),
+        Token::Integer(5),
         Token::Semicolon,
-        Token::Integer("5"),
+        Token::Integer(5),
         Token::LessThan,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::GreaterThan,
-        Token::Integer("5"),
+        Token::Integer(5),
         Token::Semicolon,
         Token::If,
         Token::LeftParenthesis,
-        Token::Integer("5"),
+        Token::Integer(5),
         Token::LessThan,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::RightParenthesis,
         Token::LeftBrace,
         Token::Return,
@@ -294,13 +295,13 @@ fn test_next_token() {
         Token::False,
         Token::Semicolon,
         Token::RightBrace,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::Equal,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::Semicolon,
-        Token::Integer("10"),
+        Token::Integer(10),
         Token::NotEqual,
-        Token::Integer("9"),
+        Token::Integer(9),
         Token::Semicolon,
         Token::EndOfFile,
     ];

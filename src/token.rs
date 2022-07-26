@@ -10,7 +10,7 @@ pub enum Token<'source> {
 
     //Identifiers + literals
     Identifier(&'source str), //e.g. "foo", "bar", "x", "y"
-    Integer(&'source str),    //"1343456", "7", "34"
+    Integer(i32),             //"1343456", "7", "34"
 
     //Operators
     Assign,      //"="
